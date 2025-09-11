@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backoffice:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: vpn-backoffice
+    environment:
+      - VITE_API_BASE_URL=http://backend:8000
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  backend:
+    image: vpn-backend:latest
+    container_name: vpn-backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ALLOWED_ORIGINS=["http://localhost:3000"]
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+
