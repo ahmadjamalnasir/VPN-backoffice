@@ -53,7 +53,7 @@ export default function UsersPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Users</h1>
+          <h1 className="text-3xl font-bold">VPN Users</h1>
         </div>
 
         <div className="flex gap-4">
@@ -82,7 +82,7 @@ export default function UsersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>User Management</CardTitle>
+            <CardTitle>VPN User Management</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
