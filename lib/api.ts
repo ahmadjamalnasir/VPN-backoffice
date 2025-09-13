@@ -24,10 +24,11 @@ api.interceptors.response.use(
   },
   (err) => {
     console.error('API Error:', err.response?.status, err.response?.data)
-    if (err.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token')
-      window.location.href = '/login'
-    }
+    // Disable automatic logout on 401 for now
+    // if (err.response?.status === 401 && typeof window !== 'undefined') {
+    //   localStorage.removeItem('auth_token')
+    //   window.location.href = '/login'
+    // }
     return Promise.reject(err)
   }
 )

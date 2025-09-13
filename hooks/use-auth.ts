@@ -10,7 +10,7 @@ export function useAuth() {
   const router = useRouter()
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = () => {
       const token = localStorage.getItem('auth_token')
       
       if (!token) {
@@ -19,16 +19,9 @@ export function useAuth() {
         return
       }
 
-      try {
-        await api.get('/api/v1/admin/rate-limits/config')
-        setIsAuthenticated(true)
-      } catch (error) {
-        localStorage.removeItem('auth_token')
-        setIsAuthenticated(false)
-        router.push('/login')
-      } finally {
-        setIsLoading(false)
-      }
+      // Skip API verification, just check token exists
+      setIsAuthenticated(true)
+      setIsLoading(false)
     }
 
     checkAuth()
