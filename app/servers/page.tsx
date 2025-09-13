@@ -16,13 +16,15 @@ import { useForm } from 'react-hook-form'
 import { useRole } from '@/hooks/use-role'
 
 interface ServerForm {
-  name: string
+  hostname: string
+  location: string
   ip_address: string
-  country: string
-  city: string
+  endpoint: string
+  public_key: string
+  available_ips: string
   is_premium: boolean
   status: 'active' | 'inactive' | 'maintenance'
-  max_connections: number
+  max_connection: number
 }
 
 export default function ServersPage() {
@@ -41,14 +43,15 @@ export default function ServersPage() {
   const createServer = useMutation({
     mutationFn: (data: ServerForm) => {
       const params = new URLSearchParams({
-        hostname: data.name,
-        location: `${data.city}-${data.country}`,
+        hostname: data.hostname,
+        location: data.location,
         ip_address: data.ip_address,
-        endpoint: `${data.ip_address}:51820`,
-        public_key: 'server_public_key',
-        available_ips: '10.0.0.0/24',
+        endpoint: data.endpoint,
+        public_key: data.public_key,
+        available_ips: data.available_ips,
         is_premium: data.is_premium.toString(),
-        status: data.status
+        status: data.status,
+        max_connection: data.max_connection.toString()
       })
       return api.post(`/api/v1/admin/add_server?${params}`)
     },
@@ -66,7 +69,8 @@ export default function ServersPage() {
       const params = new URLSearchParams({
         status: data.status,
         is_premium: data.is_premium.toString(),
-        max_load: '0.75'
+        max_load: '0.75',
+        max_connection: data.max_connection.toString()
       })
       return api.put(`/api/v1/admin/servers/${id}?${params}`)
     },
@@ -99,13 +103,15 @@ export default function ServersPage() {
 
   const handleEdit = (server: VPNServer) => {
     setEditingServer(server)
-    setValue('name', server.name)
+    setValue('hostname', server.name)
+    setValue('location', `${server.city}-${server.country}`)
     setValue('ip_address', server.ip_address)
-    setValue('country', server.country)
-    setValue('city', server.city)
+    setValue('endpoint', `${server.ip_address}:51820`)
+    setValue('public_key', 'server_public_key')
+    setValue('available_ips', '10.0.0.0/24')
     setValue('is_premium', server.is_premium)
     setValue('status', server.status)
-    setValue('max_connections', server.max_connections)
+    setValue('max_connection', server.max_connections)
     setShowForm(true)
   }
 
@@ -146,22 +152,32 @@ export default function ServersPage() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    placeholder="Server name"
-                    {...register('name', { required: true })}
+                    placeholder="Hostname (e.g., vpn-us-east-1)"
+                    {...register('hostname', { required: true })}
                   />
                   <Input
-                    placeholder="IP Address"
-                    {...register('ip_address', { required: true })}
+                    placeholder="Location (e.g., us-east)"
+                    {...register('location', { required: true })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    placeholder="Country"
-                    {...register('country', { required: true })}
+                    placeholder="IP Address (e.g., 203.0.113.1)"
+                    {...register('ip_address', { required: true })}
                   />
                   <Input
-                    placeholder="City"
-                    {...register('city', { required: true })}
+                    placeholder="Endpoint (e.g., 203.0.113.1:51820)"
+                    {...register('endpoint', { required: true })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    placeholder="Public Key"
+                    {...register('public_key', { required: true })}
+                  />
+                  <Input
+                    placeholder="Available IPs (e.g., 10.0.0.0/24)"
+                    {...register('available_ips', { required: true })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -175,8 +191,8 @@ export default function ServersPage() {
                   </select>
                   <Input
                     type="number"
-                    placeholder="Max connections"
-                    {...register('max_connections', { required: true, valueAsNumber: true })}
+                    placeholder="Max Connection"
+                    {...register('max_connection', { required: true, valueAsNumber: true })}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
