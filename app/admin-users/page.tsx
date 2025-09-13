@@ -11,6 +11,7 @@ import { api } from '@/lib/api'
 import { toast } from 'sonner'
 import { Plus, Trash2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { useRole } from '@/hooks/use-role'
 
 interface AdminUser {
   id: string
@@ -34,6 +35,7 @@ export default function AdminUsersPage() {
   const [showForm, setShowForm] = useState(false)
   const queryClient = useQueryClient()
   const { register, handleSubmit, reset } = useForm<AdminUserForm>()
+  const { isSuperAdmin } = useRole()
 
   const { data: adminUsers, isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -75,10 +77,12 @@ export default function AdminUsersPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Admin Users</h1>
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Admin User
-          </Button>
+          {isSuperAdmin && (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Admin User
+            </Button>
+          )}
         </div>
 
         {showForm && (
@@ -166,13 +170,15 @@ export default function AdminUsersPage() {
                       <TableCell>{user.is_active ? 'Active' : 'Inactive'}</TableCell>
                       <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(user.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isSuperAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(user.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -12,12 +12,14 @@ import { api } from '@/lib/api'
 import { User } from '@/lib/types'
 import { toast } from 'sonner'
 import { Search, Eye } from 'lucide-react'
+import { useRole } from '@/hooks/use-role'
 
 export default function UsersPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const queryClient = useQueryClient()
+  const { isSuperAdmin } = useRole()
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users', 'list'],
@@ -107,12 +109,18 @@ export default function UsersPage() {
                       <TableCell className="capitalize">{user.role}</TableCell>
                       <TableCell className="capitalize">{user.subscription_status}</TableCell>
                       <TableCell>
-                        <Switch
-                          checked={user.is_active}
-                          onCheckedChange={(checked) =>
-                            updateUserStatus.mutate({ id: user.id, is_active: checked })
-                          }
-                        />
+                        {isSuperAdmin ? (
+                          <Switch
+                            checked={user.is_active}
+                            onCheckedChange={(checked) =>
+                              updateUserStatus.mutate({ id: user.id, is_active: checked })
+                            }
+                          />
+                        ) : (
+                          <span className={user.is_active ? 'text-green-600' : 'text-red-600'}>
+                            {user.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button

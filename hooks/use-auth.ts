@@ -29,6 +29,7 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_role')
     setIsAuthenticated(false)
     router.push('/login')
   }

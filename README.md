@@ -4,23 +4,35 @@ A comprehensive admin panel for VPN management built with Next.js 14, TypeScript
 
 ## ✅ Complete Implementation
 
-### 🔐 Authentication System
-- JWT-based admin authentication with backend verification
+### 🔐 Authentication & Role-Based Access
+- JWT-based admin authentication via `/api/v1/admin-auth/login`
+- Role-based permissions (Admin vs Super Admin)
 - Protected routes with automatic token validation
-- Secure logout functionality
-- Admin-only access via `/api/v1/admin/rate-limits/config`
+- Secure logout with token cleanup
 
-### 👥 User Management (`/users`)
+### 👥 VPN Users Management (`/users`)
 **Integrated APIs:**
-- `GET /api/v1/users/list` - Paginated user listing
+- `GET /api/v1/users/?skip=0&limit=100` - Paginated user listing
 - `GET /api/v1/users/{id}` - User profile details
-- `PATCH /api/v1/users/{id}/status` - Toggle user status
+- `PATCH /api/v1/users/{id}/status` - Toggle user status (Super Admin only)
 
 **Features:**
 - Searchable and filterable user table (active/inactive)
-- Real-time status toggle switches
+- Real-time status toggle switches (role-based)
 - User detail modal with profile information
-- Responsive design with mobile support
+- Mobile-responsive design
+
+### 👨‍💼 Admin Users Management (`/admin-users`) .
+**Integrated APIs:**
+- `GET /api/v1/admin/admin-users` - List admin users
+- `POST /api/v1/admin/create-admin-user` - Create admin user (Super Admin only)
+- `DELETE /api/v1/admin/admin-users/{id}` - Delete admin user (Super Admin only)
+
+**Features:**
+- Create admin users with role assignment
+- View admin user details and permissions
+- Delete admin users (Super Admin only)
+- Form validation with React Hook Form
 
 ### 💳 Subscription Plans (`/plans`)
 **Integrated APIs:**
@@ -73,6 +85,21 @@ A comprehensive admin panel for VPN management built with Next.js 14, TypeScript
 - Overall system status overview
 - Last check timestamps
 
+## 🔐 Role-Based Access Control
+
+### **Admin Role (View-Only Access):**
+- ✅ View VPN users, admin users, dashboard, analytics, health
+- ❌ Cannot create/modify users or servers
+- ❌ Cannot update user status or delete admin users
+
+### **Super Admin Role (Full Access):**
+- ✅ All Admin permissions plus full CRUD operations
+- ✅ Create/delete admin users
+- ✅ Update VPN user status
+- ✅ Full system management
+
+**Current Super Admin:** `admin` / `admin123` (role: `super_admin`)
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 with App Router
@@ -88,15 +115,17 @@ A comprehensive admin panel for VPN management built with Next.js 14, TypeScript
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 18+ or Python 3.9+ (for virtual environment setup)
 - Running VPN backend on port 8000
 
-### Installation
+### One-Command Setup
 ```bash
-# Quick setup
-./setup.sh
+# Complete setup with virtual environment
+./start.sh
+```
 
-# Or manually
+### Manual Setup
+```bash
 npm install
 cp .env.example .env
 npm run dev
@@ -105,14 +134,15 @@ npm run dev
 ### Access
 - **URL**: [http://localhost:3000](http://localhost:3000)
 - **Username**: `admin`
-- **Password**: `admin`
+- **Password**: `admin123`
 
 ## Project Structure
 
 ```
 ├── app/                    # Next.js App Router
 │   ├── dashboard/         # Dashboard overview
-│   ├── users/            # User management
+│   ├── users/            # VPN users management
+│   ├── admin-users/      # Admin users management
 │   ├── plans/            # Subscription plans
 │   ├── servers/          # VPN servers
 │   ├── analytics/        # Charts & analytics
@@ -126,7 +156,9 @@ npm run dev
 │   ├── api.ts           # Axios configuration with auth
 │   ├── types.ts         # TypeScript interfaces
 │   └── utils.ts         # Utility functions
-├── hooks/               # Custom React hooks (useAuth)
+├── hooks/
+│   ├── use-auth.ts      # Authentication hook
+│   └── use-role.ts      # Role-based access control
 └── docker/              # Docker configuration
 ```
 
@@ -149,28 +181,33 @@ npm run dev
 - Optimized Docker build with multi-stage
 - Standalone Next.js output
 - Environment variable configuration
-- Docker Compose for full stack deployment
+- Multiple deployment scripts
 
-## Deployment
+## Deployment Options
 
-### Development
+### 1. One-Command Start
 ```bash
+./start.sh  # Handles venv, dependencies, Docker/Node.js
+```
+
+### 2. Development
+```bash
+./deploy.sh  # Quick development setup
 npm run dev
 ```
 
-### Production
+### 3. Production
 ```bash
-npm run build
-npm start
+./prod.sh    # Production build
+npm run build && npm start
 ```
 
-### Docker
+### 4. Docker
 ```bash
+./docker-run.sh  # Docker deployment
+# Or manually:
 docker build -f docker/Dockerfile -t vpn-backoffice .
 docker run -p 3000:3000 vpn-backoffice
-
-# Or with Docker Compose
-cd docker && docker-compose up
 ```
 
 ## Environment Variables
@@ -181,16 +218,28 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 
 ## API Integration Status
 
-✅ **All 15+ Backend APIs Fully Integrated:**
-- Authentication & admin verification
-- User management with status controls
+✅ **All 18+ Backend APIs Fully Integrated:**
+- Admin authentication (`/api/v1/admin-auth/login`)
+- VPN users management (`/api/v1/users/*`)
+- Admin users management (`/api/v1/admin/admin-users`, `/api/v1/admin/create-admin-user`)
 - Subscription plans CRUD operations
 - VPN servers management
 - Analytics and performance metrics
 - System health monitoring
 
+## Security Features
+
+- JWT token-based authentication
+- Role-based access control (RBAC)
+- Protected API routes
+- Input validation and sanitization
+- Secure logout with token cleanup
+- CORS handling
+
 ## Requirements Fulfilled
 
+✅ Separate VPN Users and Admin Users management  
+✅ Role-based permissions (Admin vs Super Admin)  
 ✅ User Management with search, filters, and status toggles  
 ✅ Subscription Plans CRUD with validation  
 ✅ VPN Servers management with location data  

@@ -26,6 +26,7 @@ export default function LoginPage() {
       console.log('Login response:', data)
       
       localStorage.setItem('auth_token', data.access_token)
+      localStorage.setItem('user_role', data.role)
       
       // Skip admin verification for now
       // await api.get('/api/v1/admin/rate-limits/config')
