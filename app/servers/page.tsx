@@ -13,6 +13,7 @@ import { VPNServer } from '@/lib/types'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Server } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { useRole } from '@/hooks/use-role'
 
 interface ServerForm {
   name: string
@@ -28,16 +29,29 @@ export default function ServersPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingServer, setEditingServer] = useState<VPNServer | null>(null)
   const queryClient = useQueryClient()
+  const { isSuperAdmin } = useRole()
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<ServerForm>()
 
   const { data: servers, isLoading } = useQuery({
     queryKey: ['servers'],
-    queryFn: () => api.get('/api/v1/vpn/servers').then(res => res.data)
+    queryFn: () => api.get('/api/v1/admin/servers').then(res => res.data)
   })
 
   const createServer = useMutation({
-    mutationFn: (data: any) => api.post('/api/v1/vpn/servers', data),
+    mutationFn: (data: ServerForm) => {
+      const params = new URLSearchParams({
+        hostname: data.name,
+        location: `${data.city}-${data.country}`,
+        ip_address: data.ip_address,
+        endpoint: `${data.ip_address}:51820`,
+        public_key: 'server_public_key',
+        available_ips: '10.0.0.0/24',
+        is_premium: data.is_premium.toString(),
+        status: data.status
+      })
+      return api.post(`/api/v1/admin/add_server?${params}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['servers'] })
       toast.success('Server created successfully')
@@ -48,8 +62,14 @@ export default function ServersPage() {
   })
 
   const updateServer = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      api.put(`/api/v1/vpn/servers/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: ServerForm }) => {
+      const params = new URLSearchParams({
+        status: data.status,
+        is_premium: data.is_premium.toString(),
+        max_load: '0.75'
+      })
+      return api.put(`/api/v1/admin/servers/${id}?${params}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['servers'] })
       toast.success('Server updated successfully')
@@ -61,7 +81,7 @@ export default function ServersPage() {
   })
 
   const deleteServer = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/v1/vpn/servers/${id}`),
+    mutationFn: (id: string) => api.delete(`/api/v1/admin/servers/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['servers'] })
       toast.success('Server deleted successfully')
@@ -109,10 +129,12 @@ export default function ServersPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">VPN Servers</h1>
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Server
-          </Button>
+          {isSuperAdmin && (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Server
+            </Button>
+          )}
         </div>
 
         {showForm && (
@@ -229,22 +251,24 @@ export default function ServersPage() {
                         {server.current_connections}/{server.max_connections}
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(server)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(server.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {isSuperAdmin && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(server)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(server.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
