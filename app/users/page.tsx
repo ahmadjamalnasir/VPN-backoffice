@@ -21,7 +21,7 @@ export default function UsersPage() {
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users', 'list'],
-    queryFn: () => api.get('/api/v1/users/list').then(res => res.data)
+    queryFn: () => api.get('/api/v1/users/?skip=0&limit=100').then(res => res.data)
   })
 
   const { data: userDetails } = useQuery({

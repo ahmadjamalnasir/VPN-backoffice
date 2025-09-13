@@ -8,6 +8,7 @@ export const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
+  console.log('API Request:', config.method?.toUpperCase(), config.url, config.data)
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
   if (token) {
     config.headers = config.headers || {}
@@ -17,8 +18,12 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    console.log('API Response:', res.status, res.data)
+    return res
+  },
   (err) => {
+    console.error('API Error:', err.response?.status, err.response?.data)
     if (err.response?.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
       window.location.href = '/login'

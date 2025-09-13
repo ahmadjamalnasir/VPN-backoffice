@@ -9,7 +9,7 @@ import { api } from '@/lib/api'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -19,7 +19,12 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const { data } = await api.post('/api/v1/auth/login', { username, password })
+      console.log('Login request:', { email, password })
+      console.log('API URL:', `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/admin-auth`)
+      
+      const { data } = await api.post('/api/v1/admin-auth', { email, password })
+      console.log('Login response:', data)
+      
       localStorage.setItem('auth_token', data.access_token)
       
       await api.get('/api/v1/admin/rate-limits/config')
@@ -27,7 +32,9 @@ export default function LoginPage() {
       toast.success('Login successful')
       router.push('/dashboard')
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Login failed')
+      console.error('Login error:', error.response?.data)
+      console.error('Full error:', error)
+      toast.error(error.response?.data?.detail || error.response?.data?.message || 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -42,10 +49,10 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <Input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
             <Input
