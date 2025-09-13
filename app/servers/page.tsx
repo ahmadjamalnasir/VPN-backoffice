@@ -18,22 +18,22 @@ import { useRole } from '@/hooks/use-role'
 interface ServerForm {
   hostname: string
   location: string
-  ip_address: string
   endpoint: string
   public_key: string
-  available_ips: string
+  tunnel_ip: string
+  allowed_ips: string
   is_premium: boolean
   status: 'active' | 'inactive' | 'maintenance'
-  max_connection: number
+  max_connections: number
 }
 
 export default function ServersPage() {
   const [showForm, setShowForm] = useState(false)
-  const [editingServer, setEditingServer] = useState<VPNServer | null>(null)
+  const [editingServer, setEditingServer] = useState<any | null>(null)
   const queryClient = useQueryClient()
   const { isSuperAdmin } = useRole()
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<ServerForm>()
+  const { register, handleSubmit, reset, setValue } = useForm<ServerForm>()
 
   const { data: servers, isLoading } = useQuery({
     queryKey: ['servers'],
@@ -45,13 +45,13 @@ export default function ServersPage() {
       const params = new URLSearchParams({
         hostname: data.hostname,
         location: data.location,
-        ip_address: data.ip_address,
         endpoint: data.endpoint,
         public_key: data.public_key,
-        available_ips: data.available_ips,
+        tunnel_ip: data.tunnel_ip,
+        allowed_ips: data.allowed_ips,
         is_premium: data.is_premium.toString(),
         status: data.status,
-        max_connection: data.max_connection.toString()
+        max_connections: data.max_connections.toString()
       })
       return api.post(`/api/v1/admin/add_server?${params}`)
     },
@@ -67,10 +67,15 @@ export default function ServersPage() {
   const updateServer = useMutation({
     mutationFn: ({ id, data }: { id: string; data: ServerForm }) => {
       const params = new URLSearchParams({
-        status: data.status,
+        hostname: data.hostname,
+        location: data.location,
+        endpoint: data.endpoint,
+        public_key: data.public_key,
+        tunnel_ip: data.tunnel_ip,
+        allowed_ips: data.allowed_ips,
         is_premium: data.is_premium.toString(),
-        max_load: '0.75',
-        max_connection: data.max_connection.toString()
+        status: data.status,
+        max_connections: data.max_connections.toString()
       })
       return api.put(`/api/v1/admin/servers/${id}?${params}`)
     },
@@ -101,17 +106,17 @@ export default function ServersPage() {
     }
   }
 
-  const handleEdit = (server: VPNServer) => {
+  const handleEdit = (server: any) => {
     setEditingServer(server)
-    setValue('hostname', server.name)
-    setValue('location', `${server.city}-${server.country}`)
-    setValue('ip_address', server.ip_address)
-    setValue('endpoint', `${server.ip_address}:51820`)
-    setValue('public_key', 'server_public_key')
-    setValue('available_ips', '10.0.0.0/24')
+    setValue('hostname', server.hostname)
+    setValue('location', server.location)
+    setValue('endpoint', server.endpoint)
+    setValue('public_key', server.public_key)
+    setValue('tunnel_ip', server.tunnel_ip)
+    setValue('allowed_ips', server.allowed_ips)
     setValue('is_premium', server.is_premium)
     setValue('status', server.status)
-    setValue('max_connection', server.max_connections)
+    setValue('max_connections', server.max_connections)
     setShowForm(true)
   }
 
@@ -152,32 +157,32 @@ export default function ServersPage() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    placeholder="Hostname (e.g., vpn-us-east-1)"
+                    placeholder="Hostname (e.g., test-server-1)"
                     {...register('hostname', { required: true })}
                   />
                   <Input
-                    placeholder="Location (e.g., us-east)"
+                    placeholder="Location (e.g., United States)"
                     {...register('location', { required: true })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    placeholder="IP Address (e.g., 203.0.113.1)"
-                    {...register('ip_address', { required: true })}
-                  />
-                  <Input
-                    placeholder="Endpoint (e.g., 203.0.113.1:51820)"
+                    placeholder="Endpoint (e.g., 23.123.12.12:51820)"
                     {...register('endpoint', { required: true })}
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <Input
                     placeholder="Public Key"
                     {...register('public_key', { required: true })}
                   />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <Input
-                    placeholder="Available IPs (e.g., 10.0.0.0/24)"
-                    {...register('available_ips', { required: true })}
+                    placeholder="Tunnel IP (e.g., 10.221.12.11/32)"
+                    {...register('tunnel_ip', { required: true })}
+                  />
+                  <Input
+                    placeholder="Allowed IPs (e.g., 0.0.0.0/0)"
+                    {...register('allowed_ips', { required: true })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -191,8 +196,8 @@ export default function ServersPage() {
                   </select>
                   <Input
                     type="number"
-                    placeholder="Max Connection"
-                    {...register('max_connection', { required: true, valueAsNumber: true })}
+                    placeholder="Max Connections"
+                    {...register('max_connections', { required: true, valueAsNumber: true })}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -235,24 +240,34 @@ export default function ServersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>IP Address</TableHead>
+                    <TableHead>Hostname</TableHead>
                     <TableHead>Location</TableHead>
+                    <TableHead>Endpoint</TableHead>
+                    <TableHead>Public Key</TableHead>
+                    <TableHead>Tunnel IP</TableHead>
+                    <TableHead>Allowed IPs</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Connections</TableHead>
+                    <TableHead>Load</TableHead>
+                    <TableHead>Max Connections</TableHead>
+                    <TableHead>Created At</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {servers?.map((server: VPNServer) => (
+                  {servers?.map((server: any) => (
                     <TableRow key={server.id}>
                       <TableCell className="flex items-center gap-2">
                         <Server className="h-4 w-4" />
-                        {server.name}
+                        {server.hostname}
                       </TableCell>
-                      <TableCell>{server.ip_address}</TableCell>
-                      <TableCell>{server.city}, {server.country}</TableCell>
+                      <TableCell>{server.location}</TableCell>
+                      <TableCell>{server.endpoint}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {server.public_key ? server.public_key.substring(0, 20) + '...' : 'N/A'}
+                      </TableCell>
+                      <TableCell>{server.tunnel_ip}</TableCell>
+                      <TableCell>{server.allowed_ips}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded text-xs ${server.is_premium ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
                           {server.is_premium ? 'Premium' : 'Free'}
@@ -264,7 +279,13 @@ export default function ServersPage() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        {server.current_connections}/{server.max_connections}
+                        {server.current_load ? (server.current_load * 100).toFixed(1) : '0.0'}%
+                      </TableCell>
+                      <TableCell>
+                        {server.max_connections}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {server.created_at ? new Date(server.created_at).toLocaleDateString() : 'N/A'}
                       </TableCell>
                       <TableCell>
                         {isSuperAdmin && (
