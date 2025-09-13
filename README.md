@@ -8,24 +8,8 @@ A comprehensive admin panel for VPN management built with Next.js 14, TypeScript
 - JWT-based admin authentication via `/api/v1/admin-auth/login`
 - Role-based permissions (Admin vs Super Admin)
 - Protected routes with automatic token validation
-<<<<<<< HEAD
 - Secure logout with token cleanup
-=======
-- Secure logout functionality
-- Admin-only access control
-
-### 👨‍💼 Admin Users Management (`/admin-users`)
-**Integrated APIs:**
-- `GET /api/v1/admin/admin-users` - List all admin users
-- `POST /api/v1/admin/create-admin-user` - Create new admin user
-- `DELETE /api/v1/admin/admin-users/{id}` - Delete admin user
-
-**Features:**
-- Admin user creation with role assignment (admin/super_admin)
-- User management table with status indicators
-- Secure admin user deletion with confirmation
-- Role-based access control
->>>>>>> 66d8d38cc9260087236422c870bf6d764dd4917b
+- Role detection from login response
 
 ### 👥 VPN Users Management (`/users`)
 **Integrated APIs:**
@@ -39,7 +23,7 @@ A comprehensive admin panel for VPN management built with Next.js 14, TypeScript
 - User detail modal with profile information
 - Mobile-responsive design
 
-### 👨‍💼 Admin Users Management (`/admin-users`) .
+### 👨💼 Admin Users Management (`/admin-users`)
 **Integrated APIs:**
 - `GET /api/v1/admin/admin-users` - List admin users
 - `POST /api/v1/admin/create-admin-user` - Create admin user (Super Admin only)
@@ -66,16 +50,17 @@ A comprehensive admin panel for VPN management built with Next.js 14, TypeScript
 
 ### 🖥️ VPN Servers (`/servers`)
 **Integrated APIs:**
-- `GET /api/v1/vpn/servers` - List all servers
-- `POST /api/v1/vpn/servers` - Add new server
-- `PUT /api/v1/vpn/servers/{id}` - Update server
-- `DELETE /api/v1/vpn/servers/{id}` - Remove server
+- `GET /api/v1/admin/servers` - List all servers
+- `POST /api/v1/admin/add_server` - Add new server with query parameters
+- `PUT /api/v1/admin/servers/{id}` - Update server with query parameters
+- `DELETE /api/v1/admin/servers/{id}` - Remove server
 
 **Features:**
-- Server location management (country/city)
+- Complete server management (hostname, location, endpoint, public_key, tunnel_ip, allowed_ips)
 - Premium/free server classification
 - Status management (active/inactive/maintenance)
-- Connection capacity tracking with real-time data
+- Max connections and current load tracking
+- Role-based access control (Super Admin only)
 
 ### 📊 Analytics & Dashboard (`/analytics`, `/dashboard`)
 **Integrated APIs:**
@@ -158,11 +143,7 @@ npm run dev
 ```
 ├── app/                    # Next.js App Router
 │   ├── dashboard/         # Dashboard overview
-<<<<<<< HEAD
 │   ├── users/            # VPN users management
-=======
-│   ├── users/            # User management
->>>>>>> 66d8d38cc9260087236422c870bf6d764dd4917b
 │   ├── admin-users/      # Admin users management
 │   ├── plans/            # Subscription plans
 │   ├── servers/          # VPN servers
@@ -239,20 +220,14 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 
 ## API Integration Status
 
-✅ **All 18+ Backend APIs Fully Integrated:**
-<<<<<<< HEAD
-- Admin authentication (`/api/v1/admin-auth/login`)
-- VPN users management (`/api/v1/users/*`)
-- Admin users management (`/api/v1/admin/admin-users`, `/api/v1/admin/create-admin-user`)
-=======
-- Authentication & admin verification
-- User management with status controls
-- Admin users management with role-based access
->>>>>>> 66d8d38cc9260087236422c870bf6d764dd4917b
-- Subscription plans CRUD operations
-- VPN servers management
-- Analytics and performance metrics
-- System health monitoring
+✅ **All 20+ Backend APIs Fully Integrated:**
+- Admin authentication (`/api/v1/admin-auth/login`) - Username/password with role detection
+- VPN users management (`/api/v1/users/?skip=0&limit=100`, `/api/v1/users/{id}`, `/api/v1/users/{id}/status`)
+- Admin users management (`/api/v1/admin/admin-users`, `/api/v1/admin/create-admin-user`, `/api/v1/admin/admin-users/{id}`)
+- VPN servers management (`/api/v1/admin/servers`, `/api/v1/admin/add_server`, `/api/v1/admin/servers/{id}`)
+- Subscription plans CRUD operations (`/api/v1/subscriptions/plans/*`)
+- Analytics and performance metrics (`/api/v1/analytics/*`)
+- System health monitoring (`/api/v1/health/*`)
 
 ## Security Features
 
@@ -270,7 +245,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ✅ User Management with search, filters, and status toggles  
 ✅ Admin Users Management with role-based access control  
 ✅ Subscription Plans CRUD with validation  
-✅ VPN Servers management with location data  
+✅ VPN Servers management with complete field support  
 ✅ Analytics dashboard with interactive charts  
 ✅ System Health monitoring with real-time updates  
 ✅ Next.js 14 with App Router and TypeScript  
