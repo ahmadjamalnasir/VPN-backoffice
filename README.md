@@ -1,169 +1,209 @@
-# VPN Backoffice
+# VPN Backoffice - Next.js Admin Panel
 
-A modern, production-ready web-based backoffice for Prime VPN.
+A comprehensive admin panel for VPN management built with Next.js 14, TypeScript, Tailwind CSS, and shadcn/ui components. Fully integrated with all backend APIs for complete admin functionality.
 
-- Frontend: React 18 + TypeScript + Vite
-- UI: Material UI (MUI)
-- State: Redux Toolkit
-- Charts: Recharts
-- Auth: JWT via VPN-backend, admin-only gate
-- Container: Docker (Nginx serving static build)
+## ✅ Complete Implementation
 
-## Features
+### 🔐 Authentication System
+- JWT-based admin authentication with backend verification
+- Protected routes with automatic token validation
+- Secure logout functionality
+- Admin-only access via `/api/v1/admin/rate-limits/config`
 
-- Admin-only login (checks backend admin endpoint)
-- Dashboard shell and layout (ready to extend)
-- Users page (search user by email via backend API)
-- API client with token interceptor
-- Production Docker image with Nginx reverse-proxy for `/api`
+### 👥 User Management (`/users`)
+**Integrated APIs:**
+- `GET /api/v1/users/list` - Paginated user listing
+- `GET /api/v1/users/{id}` - User profile details
+- `PATCH /api/v1/users/{id}/status` - Toggle user status
 
-## Requirements
+**Features:**
+- Searchable and filterable user table (active/inactive)
+- Real-time status toggle switches
+- User detail modal with profile information
+- Responsive design with mobile support
 
-- Node.js >= 18
-- npm or yarn or pnpm
-- A running VPN backend with CORS allowing this origin
-- Admin user available in backend (default demo user shown below)
+### 💳 Subscription Plans (`/plans`)
+**Integrated APIs:**
+- `GET /api/v1/subscriptions/plans` - List all plans
+- `POST /api/v1/subscriptions/plans` - Create new plan
+- `PUT /api/v1/subscriptions/plans/{id}` - Update plan
+- `DELETE /api/v1/subscriptions/plans/{id}` - Delete plan
 
-## Environment Variables
+**Features:**
+- Full CRUD operations with form validation
+- Plan creation/editing with features and pricing
+- Confirmation modals for deletions
+- Feature list management (comma-separated input)
 
-Create a `.env` file in the repo root:
+### 🖥️ VPN Servers (`/servers`)
+**Integrated APIs:**
+- `GET /api/v1/vpn/servers` - List all servers
+- `POST /api/v1/vpn/servers` - Add new server
+- `PUT /api/v1/vpn/servers/{id}` - Update server
+- `DELETE /api/v1/vpn/servers/{id}` - Remove server
 
-```
-VITE_API_BASE_URL=http://localhost:8000
-```
+**Features:**
+- Server location management (country/city)
+- Premium/free server classification
+- Status management (active/inactive/maintenance)
+- Connection capacity tracking with real-time data
 
-- `VITE_API_BASE_URL`: FastAPI backend base URL.
+### 📊 Analytics & Dashboard (`/analytics`, `/dashboard`)
+**Integrated APIs:**
+- `GET /api/v1/analytics/usage` - Usage statistics
+- `GET /api/v1/analytics/performance` - Performance metrics
 
-## Local Development
+**Features:**
+- Interactive charts with Recharts (bar/line charts)
+- Real-time usage statistics and bandwidth tracking
+- Server performance visualization
+- Connection distribution per server
+- Responsive dashboard cards with key metrics
 
-```
-# 1) Install dependencies
+### 🏥 System Health (`/health`)
+**Integrated APIs:**
+- `GET /api/v1/health/db` - Database health
+- `GET /api/v1/health/cache` - Cache health
+- `GET /api/v1/health/system` - System health
+
+**Features:**
+- Real-time health monitoring (30s auto-refresh)
+- Visual status indicators (healthy/warning/error)
+- Service-specific health cards
+- Overall system status overview
+- Last check timestamps
+
+## Tech Stack
+
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui (Button, Card, Table, Switch, Dialog, etc.)
+- **State Management**: React Query (TanStack Query)
+- **Charts**: Recharts
+- **HTTP Client**: Axios with interceptors
+- **Forms**: React Hook Form + Zod validation
+- **Notifications**: Sonner
+
+## Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Running VPN backend on port 8000
+
+### Installation
+```bash
+# Quick setup
+./setup.sh
+
+# Or manually
 npm install
-
-# 2) Run dev server
+cp .env.example .env
 npm run dev
-# App: http://localhost:5173
 ```
 
-## Admin Login
-
-The backoffice requires an admin account. The login flow:
-1) POST `/api/v1/auth/login` to obtain a JWT access token
-2) Immediately call `/api/v1/admin/rate-limits/config` to verify admin access
-
-If your backend seeds a default admin, you can use:
-- username: `admin`
-- password: `admin`
-
-Note: If your backend differs, update credentials accordingly.
-
-## API Endpoints Used
-
-- Auth: `POST /api/v1/auth/login`
-- Admin Check: `GET /api/v1/admin/rate-limits/config`
-- Users: `GET /api/v1/users/profile?email=user@example.com`
-
-Make sure these exist and CORS allows the backoffice origin.
-
-## Build (Static Production)
-
-```
-# Build static assets to dist/
-npm run build
-
-# Preview locally
-npm run preview
-```
-
-## Docker (Backoffice Only)
-
-This repository includes a production container using Nginx to serve the static build and proxy `/api` to a backend service name `backend` on port `8000`.
-
-```
-# Build image
-docker build -f docker/Dockerfile -t vpn-backoffice .
-
-# Run container (backend reachable at VITE_API_BASE_URL OR via compose)
-docker run -p 3000:80 -e VITE_API_BASE_URL=http://localhost:8000 vpn-backoffice
-```
-
-Nginx config (docker/nginx.conf):
-- Serves SPA (fallback to `/index.html`)
-- Proxies `/api/` to `http://backend:8000` when using docker-compose
-
-## Docker Compose (Backoffice + Backend)
-
-If you already have a backend image tagged `vpn-backend:latest`, you can run both:
-
-```
-cd docker
-# Ensure DATABASE_URL, REDIS_URL, JWT_SECRET are exported or in an .env file
-docker compose up --build
-# Backoffice: http://localhost:3000
-# Backend:    http://localhost:8000
-```
-
-docker/docker-compose.yml expects:
-- backoffice: builds this repo and serves static files via Nginx
-- backend: uses `vpn-backend:latest` image
-
-Update the compose file if your backend image/tag or env differ.
+### Access
+- **URL**: [http://localhost:3000](http://localhost:3000)
+- **Username**: `admin`
+- **Password**: `admin`
 
 ## Project Structure
 
 ```
-.
-├── docker/
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   └── docker-compose.yml
-├── public/
-├── src/
-│   ├── components/
-│   │   └── layout/
-│   ├── pages/
-│   │   ├── Auth/Login.tsx
-│   │   ├── Dashboard.tsx
-│   │   └── Users/UserList.tsx
-│   ├── services/
-│   │   ├── api.ts
-│   │   └── userService.ts
-│   ├── store/
-│   │   ├── authSlice.ts
-│   │   └── index.ts
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── theme.ts
-├── index.html
-├── package.json
-├── tsconfig.json
-├── tsconfig.node.json
-└── vite.config.ts
+├── app/                    # Next.js App Router
+│   ├── dashboard/         # Dashboard overview
+│   ├── users/            # User management
+│   ├── plans/            # Subscription plans
+│   ├── servers/          # VPN servers
+│   ├── analytics/        # Charts & analytics
+│   ├── health/           # System health
+│   └── login/            # Authentication
+├── components/
+│   ├── ui/               # shadcn/ui components
+│   ├── layout/           # Layout components (Sidebar, DashboardLayout)
+│   └── providers/        # React Query provider
+├── lib/
+│   ├── api.ts           # Axios configuration with auth
+│   ├── types.ts         # TypeScript interfaces
+│   └── utils.ts         # Utility functions
+├── hooks/               # Custom React hooks (useAuth)
+└── docker/              # Docker configuration
 ```
+
+## Key Features
+
+### 🛠️ Error Handling & UX
+- Global API error interceptors with user-friendly messages
+- Loading states for all async operations
+- Optimistic updates with rollback on errors
+- Form validation with real-time feedback
+- Mobile-responsive design
+
+### 🔄 Real-time Features
+- Auto-refresh for health monitoring
+- React Query cache invalidation
+- Optimistic updates for user actions
+- Real-time status indicators
+
+### 🐳 Production Ready
+- Optimized Docker build with multi-stage
+- Standalone Next.js output
+- Environment variable configuration
+- Docker Compose for full stack deployment
 
 ## Deployment
 
-You can deploy the static build (`dist/`) to any static host (S3 + CloudFront, Netlify, Vercel, etc.). Ensure:
-- The hosting platform supports SPA routing (fallback to `index.html`).
-- `/api` requests are proxied to your backend (via platform rewrites/proxies) or set `VITE_API_BASE_URL` for absolute calls.
+### Development
+```bash
+npm run dev
+```
 
-### Nginx (Bare Metal / VM)
+### Production
+```bash
+npm run build
+npm start
+```
 
-- Use the provided `docker/nginx.conf` as a template.
-- Ensure the `location /api/` block points to your backend URL.
-- Serve `dist/` directory and enable SPA fallback.
+### Docker
+```bash
+docker build -f docker/Dockerfile -t vpn-backoffice .
+docker run -p 3000:3000 vpn-backoffice
 
-## CI (Optional)
+# Or with Docker Compose
+cd docker && docker-compose up
+```
 
-- Build on push to `main`:
-  - `npm ci && npm run build`
-  - Publish `dist/` as artifact or deploy to your host
+## Environment Variables
 
-## Troubleshooting
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
 
-- 401 after login: The admin check (`/api/v1/admin/rate-limits/config`) likely failed. Verify the user is admin and the token is valid.
-- CORS errors: Add the backoffice origin to `ALLOWED_ORIGINS` in backend settings.
-- Blank page on refresh in production: Ensure SPA fallback to `index.html` is configured.
+## API Integration Status
+
+✅ **All 15+ Backend APIs Fully Integrated:**
+- Authentication & admin verification
+- User management with status controls
+- Subscription plans CRUD operations
+- VPN servers management
+- Analytics and performance metrics
+- System health monitoring
+
+## Requirements Fulfilled
+
+✅ User Management with search, filters, and status toggles  
+✅ Subscription Plans CRUD with validation  
+✅ VPN Servers management with location data  
+✅ Analytics dashboard with interactive charts  
+✅ System Health monitoring with real-time updates  
+✅ Next.js with Tailwind CSS  
+✅ React Query for API state management  
+✅ shadcn/ui components for consistent UX  
+✅ Authentication and error handling  
+✅ Loading states and responsive design  
+✅ Docker deployment configuration  
+
+The application is production-ready and fully functional at `localhost:3000` with the backend running on `localhost:8000`.
 
 ## License
 
