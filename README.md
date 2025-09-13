@@ -8,7 +8,24 @@ A comprehensive admin panel for VPN management built with Next.js 14, TypeScript
 - JWT-based admin authentication via `/api/v1/admin-auth/login`
 - Role-based permissions (Admin vs Super Admin)
 - Protected routes with automatic token validation
+<<<<<<< HEAD
 - Secure logout with token cleanup
+=======
+- Secure logout functionality
+- Admin-only access control
+
+### 👨‍💼 Admin Users Management (`/admin-users`)
+**Integrated APIs:**
+- `GET /api/v1/admin/admin-users` - List all admin users
+- `POST /api/v1/admin/create-admin-user` - Create new admin user
+- `DELETE /api/v1/admin/admin-users/{id}` - Delete admin user
+
+**Features:**
+- Admin user creation with role assignment (admin/super_admin)
+- User management table with status indicators
+- Secure admin user deletion with confirmation
+- Role-based access control
+>>>>>>> 66d8d38cc9260087236422c870bf6d764dd4917b
 
 ### 👥 VPN Users Management (`/users`)
 **Integrated APIs:**
@@ -141,7 +158,11 @@ npm run dev
 ```
 ├── app/                    # Next.js App Router
 │   ├── dashboard/         # Dashboard overview
+<<<<<<< HEAD
 │   ├── users/            # VPN users management
+=======
+│   ├── users/            # User management
+>>>>>>> 66d8d38cc9260087236422c870bf6d764dd4917b
 │   ├── admin-users/      # Admin users management
 │   ├── plans/            # Subscription plans
 │   ├── servers/          # VPN servers
@@ -219,9 +240,15 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ## API Integration Status
 
 ✅ **All 18+ Backend APIs Fully Integrated:**
+<<<<<<< HEAD
 - Admin authentication (`/api/v1/admin-auth/login`)
 - VPN users management (`/api/v1/users/*`)
 - Admin users management (`/api/v1/admin/admin-users`, `/api/v1/admin/create-admin-user`)
+=======
+- Authentication & admin verification
+- User management with status controls
+- Admin users management with role-based access
+>>>>>>> 66d8d38cc9260087236422c870bf6d764dd4917b
 - Subscription plans CRUD operations
 - VPN servers management
 - Analytics and performance metrics
@@ -241,11 +268,12 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ✅ Separate VPN Users and Admin Users management  
 ✅ Role-based permissions (Admin vs Super Admin)  
 ✅ User Management with search, filters, and status toggles  
+✅ Admin Users Management with role-based access control  
 ✅ Subscription Plans CRUD with validation  
 ✅ VPN Servers management with location data  
 ✅ Analytics dashboard with interactive charts  
 ✅ System Health monitoring with real-time updates  
-✅ Next.js with Tailwind CSS  
+✅ Next.js 14 with App Router and TypeScript  
 ✅ React Query for API state management  
 ✅ shadcn/ui components for consistent UX  
 ✅ Authentication and error handling  
