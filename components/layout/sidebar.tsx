@@ -21,7 +21,6 @@ const navigation = [
   { name: 'Plans', href: '/plans', icon: CreditCard },
   { name: 'Servers', href: '/servers', icon: Server },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Health', href: '/health', icon: Activity },
 ]
 
 export function Sidebar() {
