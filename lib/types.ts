@@ -22,9 +22,15 @@ export interface VPNUser {
 export interface SubscriptionPlan {
   id: string
   name: string
-  price: number
+  description: string
+  price_usd: number
   duration_days: number
-  features: string[]
+  features: {
+    servers: string
+    bandwidth: string
+    devices: number
+    support: string
+  }
   is_active: boolean
 }
 

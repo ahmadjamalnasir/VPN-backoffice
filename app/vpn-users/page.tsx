@@ -11,13 +11,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { VPNUser } from '@/lib/types'
 import { toast } from 'sonner'
-import { Search, Eye } from 'lucide-react'
+import { Search, History, CreditCard } from 'lucide-react'
 import { useRole } from '@/hooks/use-role'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 export default function UsersPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [selectedUser, setSelectedUser] = useState<VPNUser | null>(null)
+  const [historyUser, setHistoryUser] = useState<VPNUser | null>(null)
+  const [activeSubUser, setActiveSubUser] = useState<VPNUser | null>(null)
   const queryClient = useQueryClient()
   const { isSuperAdmin } = useRole()
 
@@ -37,6 +40,18 @@ export default function UsersPage() {
     queryKey: ['users', selectedUser?.user_id],
     queryFn: () => api.get(`/api/v1/admin/vpn-users/${selectedUser?.user_id}`).then(res => res.data),
     enabled: !!selectedUser?.user_id
+  })
+
+  const { data: subscriptionHistory } = useQuery({
+    queryKey: ['subscription-history', historyUser?.user_id],
+    queryFn: () => api.get(`/api/v1/admin/subscriptions/users/${historyUser?.user_id}/history`).then(res => res.data),
+    enabled: !!historyUser?.user_id
+  })
+
+  const { data: activeSubscription } = useQuery({
+    queryKey: ['active-subscription', activeSubUser?.user_id],
+    queryFn: () => api.get(`/api/v1/admin/subscriptions/users/${activeSubUser?.user_id}`).then(res => res.data),
+    enabled: !!activeSubUser?.user_id
   })
 
   const updateUserStatus = useMutation({
@@ -106,7 +121,7 @@ export default function UsersPage() {
                     <TableHead>Email Verified</TableHead>
                     <TableHead>Premium</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    {isSuperAdmin && <TableHead>Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -141,15 +156,28 @@ export default function UsersPage() {
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedUser(user)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+                      {isSuperAdmin && (
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setHistoryUser(user)}
+                              title="Subscription History"
+                            >
+                              <History className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setActiveSubUser(user)}
+                              title="Active Subscription"
+                            >
+                              <CreditCard className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -201,6 +229,116 @@ export default function UsersPage() {
             </CardContent>
           </Card>
         )}
+
+        <Dialog open={!!historyUser} onOpenChange={() => setHistoryUser(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Subscription History - {historyUser?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="max-h-96 overflow-y-auto">
+              {subscriptionHistory ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Auto Renew</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {subscriptionHistory.map((sub: any) => (
+                      <TableRow key={sub.id}>
+                        <TableCell>{sub.plan?.name || 'N/A'}</TableCell>
+                        <TableCell>{sub.plan?.description || 'N/A'}</TableCell>
+                        <TableCell>${sub.plan?.price_usd || '0.00'}</TableCell>
+                        <TableCell>{sub.start_date ? new Date(sub.start_date).toLocaleDateString() : 'N/A'}</TableCell>
+                        <TableCell>{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'N/A'}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            sub.status === 'active' ? 'bg-green-100 text-green-800' :
+                            sub.status === 'expired' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {sub.status || 'N/A'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className={sub.auto_renew ? 'text-green-600' : 'text-red-600'}>
+                            {sub.auto_renew ? 'Yes' : 'No'}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div>Loading subscription history...</div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!activeSubUser} onOpenChange={() => setActiveSubUser(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Active Subscription - {activeSubUser?.name}</DialogTitle>
+            </DialogHeader>
+            <div>
+              {activeSubscription ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Plan Name</label>
+                      <p>{activeSubscription.plan?.name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Description</label>
+                      <p>{activeSubscription.plan?.description || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Price</label>
+                      <p>${activeSubscription.plan?.price_usd || '0.00'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Duration</label>
+                      <p>{activeSubscription.plan?.duration_days || 0} days</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Start Date</label>
+                      <p>{activeSubscription.start_date ? new Date(activeSubscription.start_date).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">End Date</label>
+                      <p>{activeSubscription.end_date ? new Date(activeSubscription.end_date).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Status</label>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        activeSubscription.status === 'active' ? 'bg-green-100 text-green-800' :
+                        activeSubscription.status === 'expired' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {activeSubscription.status || 'N/A'}
+                      </span>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Auto Renew</label>
+                      <span className={activeSubscription.auto_renew ? 'text-green-600' : 'text-red-600'}>
+                        {activeSubscription.auto_renew ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div>Loading active subscription...</div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )

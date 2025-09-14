@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Switch } from '@/components/ui/switch'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { SubscriptionPlan } from '@/lib/types'
@@ -15,9 +16,13 @@ import { useForm } from 'react-hook-form'
 
 interface PlanForm {
   name: string
-  price: number
+  description: string
+  price_usd: number
   duration_days: number
-  features: string
+  servers: string
+  bandwidth: string
+  devices: number
+  support: string
 }
 
 export default function PlansPage() {
@@ -29,11 +34,11 @@ export default function PlansPage() {
 
   const { data: plans, isLoading } = useQuery({
     queryKey: ['plans'],
-    queryFn: () => api.get('/api/v1/subscriptions/plans').then(res => res.data)
+    queryFn: () => api.get('/api/v1/admin/subscriptions/plans').then(res => res.data)
   })
 
   const createPlan = useMutation({
-    mutationFn: (data: any) => api.post('/api/v1/subscriptions/plans', data),
+    mutationFn: (data: any) => api.post('/api/v1/admin/subscriptions/plans', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] })
       toast.success('Plan created successfully')
@@ -45,7 +50,7 @@ export default function PlansPage() {
 
   const updatePlan = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) =>
-      api.put(`/api/v1/subscriptions/plans/${id}`, data),
+      api.put(`/api/v1/admin/subscriptions/plans/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] })
       toast.success('Plan updated successfully')
@@ -57,7 +62,7 @@ export default function PlansPage() {
   })
 
   const deletePlan = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/v1/subscriptions/plans/${id}`),
+    mutationFn: (id: string) => api.delete(`/api/v1/admin/subscriptions/plans/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] })
       toast.success('Plan deleted successfully')
@@ -65,10 +70,30 @@ export default function PlansPage() {
     onError: () => toast.error('Failed to delete plan')
   })
 
+  const updatePlanStatus = useMutation({
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      api.put(`/api/v1/admin/subscriptions/plans/${id}`, { 
+        status: is_active ? 'active' : 'inactive' 
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['plans'] })
+      toast.success('Plan status updated')
+    },
+    onError: () => toast.error('Failed to update plan status')
+  })
+
   const onSubmit = (data: PlanForm) => {
     const planData = {
-      ...data,
-      features: data.features.split(',').map(f => f.trim())
+      name: data.name,
+      description: data.description,
+      price_usd: data.price_usd,
+      duration_days: data.duration_days,
+      features: {
+        servers: data.servers,
+        bandwidth: data.bandwidth,
+        devices: data.devices,
+        support: data.support
+      }
     }
 
     if (editingPlan) {
@@ -81,9 +106,13 @@ export default function PlansPage() {
   const handleEdit = (plan: SubscriptionPlan) => {
     setEditingPlan(plan)
     setValue('name', plan.name)
-    setValue('price', plan.price)
+    setValue('description', plan.description)
+    setValue('price_usd', plan.price_usd)
     setValue('duration_days', plan.duration_days)
-    setValue('features', plan.features.join(', '))
+    setValue('servers', plan.features.servers)
+    setValue('bandwidth', plan.features.bandwidth)
+    setValue('devices', plan.features.devices)
+    setValue('support', plan.features.support)
     setShowForm(true)
   }
 
@@ -118,19 +147,41 @@ export default function PlansPage() {
                   />
                   <Input
                     type="number"
-                    placeholder="Price"
-                    {...register('price', { required: true, valueAsNumber: true })}
+                    step="0.01"
+                    placeholder="Price USD"
+                    {...register('price_usd', { required: true, valueAsNumber: true })}
                   />
                 </div>
+                <Input
+                  placeholder="Description"
+                  {...register('description', { required: true })}
+                />
                 <Input
                   type="number"
                   placeholder="Duration (days)"
                   {...register('duration_days', { required: true, valueAsNumber: true })}
                 />
-                <Input
-                  placeholder="Features (comma separated)"
-                  {...register('features', { required: true })}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    placeholder="Servers (e.g., all)"
+                    {...register('servers', { required: true })}
+                  />
+                  <Input
+                    placeholder="Bandwidth (e.g., unlimited)"
+                    {...register('bandwidth', { required: true })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    type="number"
+                    placeholder="Devices"
+                    {...register('devices', { required: true, valueAsNumber: true })}
+                  />
+                  <Input
+                    placeholder="Support (e.g., priority)"
+                    {...register('support', { required: true })}
+                  />
+                </div>
                 <div className="flex gap-2">
                   <Button type="submit">
                     {editingPlan ? 'Update' : 'Create'}
@@ -164,6 +215,7 @@ export default function PlansPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Duration</TableHead>
                     <TableHead>Features</TableHead>
@@ -175,10 +227,25 @@ export default function PlansPage() {
                   {plans?.map((plan: SubscriptionPlan) => (
                     <TableRow key={plan.id}>
                       <TableCell>{plan.name}</TableCell>
-                      <TableCell>${plan.price}</TableCell>
+                      <TableCell>{plan.description}</TableCell>
+                      <TableCell>${plan.price_usd}</TableCell>
                       <TableCell>{plan.duration_days} days</TableCell>
-                      <TableCell>{plan.features.join(', ')}</TableCell>
-                      <TableCell>{plan.is_active ? 'Active' : 'Inactive'}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>Servers: {plan.features.servers}</div>
+                          <div>Bandwidth: {plan.features.bandwidth}</div>
+                          <div>Devices: {plan.features.devices}</div>
+                          <div>Support: {plan.features.support}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={plan.is_active}
+                          onCheckedChange={(checked) =>
+                            updatePlanStatus.mutate({ id: plan.id, is_active: checked })
+                          }
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
