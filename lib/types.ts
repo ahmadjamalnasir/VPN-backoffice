@@ -8,6 +8,17 @@ export interface User {
   created_at: string
 }
 
+export interface VPNUser {
+  user_id: string
+  name: string
+  email: string
+  phone: string | null
+  country: string | null
+  is_email_verified: boolean
+  is_premium: boolean
+  is_active: boolean
+}
+
 export interface SubscriptionPlan {
   id: string
   name: string

@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Switch } from '@/components/ui/switch'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { User } from '@/lib/types'
+import { VPNUser } from '@/lib/types'
 import { toast } from 'sonner'
 import { Search, Eye } from 'lucide-react'
 import { useRole } from '@/hooks/use-role'
@@ -17,24 +17,31 @@ import { useRole } from '@/hooks/use-role'
 export default function UsersPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedUser, setSelectedUser] = useState<VPNUser | null>(null)
   const queryClient = useQueryClient()
   const { isSuperAdmin } = useRole()
 
   const { data: users, isLoading } = useQuery({
-    queryKey: ['users', 'list'],
-    queryFn: () => api.get('/api/v1/users/?skip=0&limit=100').then(res => res.data)
+    queryKey: ['users', 'list', search, filter],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: '1',
+        limit: '100',
+        ...(search && { search })
+      })
+      return api.get(`/api/v1/admin/vpn-users?${params}`).then(res => res.data)
+    }
   })
 
   const { data: userDetails } = useQuery({
-    queryKey: ['users', selectedUser?.id],
-    queryFn: () => api.get(`/api/v1/users/${selectedUser?.id}`).then(res => res.data),
-    enabled: !!selectedUser?.id
+    queryKey: ['users', selectedUser?.user_id],
+    queryFn: () => api.get(`/api/v1/admin/vpn-users/${selectedUser?.user_id}`).then(res => res.data),
+    enabled: !!selectedUser?.user_id
   })
 
   const updateUserStatus = useMutation({
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
-      api.patch(`/api/v1/users/${id}/status`, { is_active }),
+      api.put(`/api/v1/admin/vpn-user/${id}/status?is_active=${is_active}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('User status updated')
@@ -42,13 +49,11 @@ export default function UsersPage() {
     onError: () => toast.error('Failed to update user status')
   })
 
-  const filteredUsers = users?.filter((user: User) => {
-    const matchesSearch = user.email.toLowerCase().includes(search.toLowerCase()) ||
-                         user.username.toLowerCase().includes(search.toLowerCase())
+  const filteredUsers = users?.filter((user: VPNUser) => {
     const matchesFilter = filter === 'all' || 
                          (filter === 'active' && user.is_active) ||
                          (filter === 'inactive' && !user.is_active)
-    return matchesSearch && matchesFilter
+    return matchesFilter
   })
 
   return (
@@ -93,27 +98,41 @@ export default function UsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Username</TableHead>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Subscription</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Country</TableHead>
+                    <TableHead>Email Verified</TableHead>
+                    <TableHead>Premium</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers?.map((user: User) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.username}</TableCell>
+                  {filteredUsers?.map((user: any) => (
+                    <TableRow key={user.user_id}>
+                      <TableCell>{user.user_id}</TableCell>
+                      <TableCell>{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell className="capitalize">{user.role}</TableCell>
-                      <TableCell className="capitalize">{user.subscription_status}</TableCell>
+                      <TableCell>{user.phone || 'N/A'}</TableCell>
+                      <TableCell>{user.country || 'N/A'}</TableCell>
+                      <TableCell>
+                        <span className={user.is_email_verified ? 'text-green-600' : 'text-red-600'}>
+                          {user.is_email_verified ? 'Verified' : 'Not Verified'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded text-xs ${user.is_premium ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {user.is_premium ? 'Premium' : 'Free'}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         {isSuperAdmin ? (
                           <Switch
                             checked={user.is_active}
                             onCheckedChange={(checked) =>
-                              updateUserStatus.mutate({ id: user.id, is_active: checked })
+                              updateUserStatus.mutate({ id: user.user_id, is_active: checked })
                             }
                           />
                         ) : (
@@ -147,16 +166,32 @@ export default function UsersPage() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium">Username</label>
-                  <p>{userDetails.username}</p>
+                  <label className="text-sm font-medium">User ID</label>
+                  <p>{userDetails.user_id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Name</label>
+                  <p>{userDetails.name}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Email</label>
                   <p>{userDetails.email}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Created At</label>
-                  <p>{new Date(userDetails.created_at).toLocaleDateString()}</p>
+                  <label className="text-sm font-medium">Phone</label>
+                  <p>{userDetails.phone || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Country</label>
+                  <p>{userDetails.country || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Email Verified</label>
+                  <p>{userDetails.is_email_verified ? 'Yes' : 'No'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Premium</label>
+                  <p>{userDetails.is_premium ? 'Yes' : 'No'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Status</label>

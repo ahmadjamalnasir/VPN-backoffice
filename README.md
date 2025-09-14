@@ -11,11 +11,11 @@ A comprehensive admin panel for VPN management built with Next.js 14, TypeScript
 - Secure logout with token cleanup
 - Role detection from login response
 
-### 👥 VPN Users Management (`/users`)
+### 👥 VPN Users Management (`/vpn-users`)
 **Integrated APIs:**
-- `GET /api/v1/users/?skip=0&limit=100` - Paginated user listing
-- `GET /api/v1/users/{id}` - User profile details
-- `PATCH /api/v1/users/{id}/status` - Toggle user status (Super Admin only)
+- `GET /api/v1/admin/vpn-users?page=1&limit=100` - Paginated user listing
+- `GET /api/v1/admin/vpn-users/{id}` - User profile details
+- `PATCH /api/v1/admin/vpn-users/{id}/status` - Toggle user status (Super Admin only)
 
 **Features:**
 - Searchable and filterable user table (active/inactive)
@@ -222,7 +222,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 
 ✅ **All 20+ Backend APIs Fully Integrated:**
 - Admin authentication (`/api/v1/admin-auth/login`) - Username/password with role detection
-- VPN users management (`/api/v1/users/?skip=0&limit=100`, `/api/v1/users/{id}`, `/api/v1/users/{id}/status`)
+- VPN users management (`/api/v1/admin/vpn-users?page=1&limit=100`, `/api/v1/admin/vpn-users/{id}`, `/api/v1/admin/vpn-users/{id}/status`)
 - Admin users management (`/api/v1/admin/admin-users`, `/api/v1/admin/create-admin-user`, `/api/v1/admin/admin-users/{id}`)
 - VPN servers management (`/api/v1/admin/servers`, `/api/v1/admin/add_server`, `/api/v1/admin/servers/{id}`)
 - Subscription plans CRUD operations (`/api/v1/subscriptions/plans/*`)

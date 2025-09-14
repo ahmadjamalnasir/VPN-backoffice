@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'VPN Users', href: '/users', icon: Users },
+  { name: 'VPN Users', href: '/vpn-users', icon: Users },
   { name: 'Admin Users', href: '/admin-users', icon: Users },
   { name: 'Plans', href: '/plans', icon: CreditCard },
   { name: 'Servers', href: '/servers', icon: Server },
